@@ -2,6 +2,7 @@ import userModel from "../models/user.model.js"
 import crypto from "crypto"
 import jwt from "jsonwebtoken"
 import config from "../config/config.js"
+import sessionModel from "../models/session.model.js"
 
 export async function register(req, res) {
     const { username, email, password } = req.body
@@ -25,8 +26,15 @@ export async function register(req, res) {
         email,
         password: hashedPassword
     })
-    const accessToken = jwt.sign({ id: user._id }, config.SECRET_KEY, { expiresIn: "15m" })
     const refreshToken = jwt.sign({ id: user._id }, config.SECRET_KEY, { expiresIn: "7d" })
+    const refreshTokenHashed = crypto.createHash("sha256").update(refreshToken).digest("hex")
+    const session = await sessionModel.create({
+        user: user._id,
+        refreshTokenHashed,
+        ip: req.ip,
+        userAgent: req.headers["user-agent"]
+    })
+    const accessToken = jwt.sign({ id: user._id, sessionId: session._id }, config.SECRET_KEY, { expiresIn: "15m" })
 
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
@@ -48,8 +56,7 @@ export async function register(req, res) {
 }
 
 export async function getMe(req, res) {
-    const token = req.cookies.token;
-    console.log(req.cookies)
+    const token = req.cookies.refreshToken;
     if (!token) {
         res.status(401).json({
             message: "token is missing"
@@ -88,15 +95,28 @@ export async function refreshToken(req, res) {
     }
     try {
         const decoded = jwt.verify(refreshToken, config.SECRET_KEY)
+        const refreshTokenHashed = crypto.createHash("sha256").update(refreshToken).digest("hex")
+        const session = await sessionModel.findOne({
+            refreshTokenHashed,
+            revoked: false
+        })
+        if (!session) {
+            return res.status(400).json({
+                message: "Invalid refresh token"
+            })
+        }
         const accessToken = jwt.sign({ id: decoded.id }, config.SECRET_KEY, { expiresIn: "15m" })
-        const refreshToken = jwt.sign({ id: decoded.id }, config.SECRET_KEY, { expiresIn: "7d" })
+        const newRefreshToken = jwt.sign({ id: decoded.id }, config.SECRET_KEY, { expiresIn: "7d" })
+        const newRefreshTokenHashed = crypto.createHash("sha256").update(newRefreshToken).digest("hex")
+        session.refreshTokenHashed = newRefreshTokenHashed
+        await session.save()
 
-        res.cookie("refreshToken", refreshToken, {
+        res.cookie("refreshToken", newRefreshToken, {
             httpOnly: true,
             secure: true,
             sameSite: "strict",
             maxAge: 7 * 24 * 60 * 60 * 1000 //7 days
-        })  
+        })
 
         res.status(200).json({
             message: "Access token refreshed successfully",
@@ -108,4 +128,49 @@ export async function refreshToken(req, res) {
             message: "Invalid refresh token"
         })
     }
+}
+
+export async function logout(req, res) {
+    const refreshToken = req.cookies.refreshToken
+    if (!refreshToken) {
+        return res.status(401).json({
+            message: "Refresh token is missing"
+        })
+    }
+
+    const refreshTokenHashed = crypto.createHash("sha256").update(refreshToken).digest("hex")
+    const session = await sessionModel.findOne({
+        refreshTokenHashed,
+        revoked: false
+    })
+    if (!session) {
+        return res.status(400).json({
+            message: "Invalid refresh token"
+        })
+    }
+    session.revoked = true
+    await session.save()
+
+    res.clearCookie("refreshToken")
+    res.status(200).json({
+        message: "Logged out successfully"
+    })
+
+}
+
+export async function logoutAll(req, res){
+    const token = req.cookies.refreshToken
+    if (!token) {
+        return res.status(401).json({
+            message: "Refresh token is missing"
+        })
+    }
+
+    const decoded = jwt.verify(token, config.SECRET_KEY)
+    await sessionModel.updateMany({ user: decoded.id }, { revoked: true })
+
+    res.clearCookie("refreshToken")
+    res.status(200).json({
+        message: "Logged out from all devices successfully"
+    })
 }
