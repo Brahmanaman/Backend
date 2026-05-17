@@ -8,7 +8,7 @@ export const register = asyncHandler(async (req, res) => {
     try {
         const { name, email, password } = req.body;
         if (!name || !email || !password) {
-            return res.status(400).json({ message: 'all fields are required' });
+            throw new Error('all fields are required');
         }
 
         const isUserExist = await UserModel.findOne({
@@ -18,7 +18,7 @@ export const register = asyncHandler(async (req, res) => {
         });
 
         if (isUserExist) {
-            return res.status(400).json({ message: 'user already exist' });
+            throw new Error('user already exist');
         }
 
         const hashedPassword = bcrypt.hashSync(password, 10);
@@ -28,7 +28,7 @@ export const register = asyncHandler(async (req, res) => {
 
     }
     catch (error) {
-        res.status(500).json({ message: 'internal server error' });
+        throw new Error("internal server error");
     }
 })
 
