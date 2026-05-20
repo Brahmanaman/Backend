@@ -16,7 +16,7 @@ app.post("/create-post", storage.single("image"), async (req, res) => {
         const post = await postModel.create({
             image: result.url,
             caption: req.body.caption
-        })
+        }) 
 
         return res.status(201).send({
             message: "post create successfully",
