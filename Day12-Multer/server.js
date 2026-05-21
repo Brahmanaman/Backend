@@ -1,9 +1,9 @@
-const app = require("./src/app")
+require("dotenv").config()
 const express = require("express")
+const app = require("./src/app")
 
 //middleware
 app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
 
 
 
