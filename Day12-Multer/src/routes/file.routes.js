@@ -12,10 +12,17 @@ router.post("/upload-multipleFiles", upload.array("images"), (req, res) => {
     res.send(req.files)
 })
 
-
 router.post("/uploadStream", upload.single("image"), (req, res) => {
     const response = uploadFiles(req.file.buffer, req.file.originalname)
     res.send(response)
+})
+
+router.post("/uploadStream-multipleFiles", upload.array("images"), (req, res) => {
+    let files = req.files
+    let response = files.map((file) => {
+        return uploadFiles(file.buffer, file.originalname)
+    })
+    res.send(response);
 })
 
 
