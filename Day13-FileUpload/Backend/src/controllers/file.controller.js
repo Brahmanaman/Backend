@@ -13,6 +13,22 @@ const imageUploadController = async (req, res) => {
     }
 }
 
+const mutipleImageUploadController = async (req, res) => {
+    try {
+        let result = await Promise.all(req.files.map(async (file) => {
+            return await uploadFile(file.buffer, file.originalname)
+        }))
+        return res.status(201).json({
+            message: "Files uploaded successfully",
+            files: result
+        })
+    }
+    catch (error) {
+        throw new Error("internal server error")
+    }
+}
+
 module.exports = {
-    imageUploadController
+    imageUploadController,
+    mutipleImageUploadController
 }
