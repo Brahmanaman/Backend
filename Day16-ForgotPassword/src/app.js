@@ -3,15 +3,19 @@ const app = express()
 const authRouter = require("./routes/auth.route")
 const cookieParser = require('cookie-parser')
 const errorMiddleware = require("./middleware/error.middleware")
+const ejs = require("ejs")
+app.set("view engine", "ejs");
 
 app.use(express.json())
 app.use(cookieParser())
 
-
+app.get("/", (req, res) => {
+    res.render("index")
+})
 app.use("/api/auth", authRouter)
 
 
-app.user(errorMiddleware)
+app.use(errorMiddleware)
 
 
 

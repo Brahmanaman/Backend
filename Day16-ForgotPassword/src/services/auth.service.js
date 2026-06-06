@@ -4,7 +4,7 @@ const generateToken = require("../utils/generateToken")
 const ApiError = require("../utils/ApiError")
 
 
-const registerService = async = (username, email, password) => {
+const registerService = async (username, email, password) => {
     const userExist = await userModel.findOne({ email })
     if (userExist) {
         throw new ApiError(409, "User already exist with this email")
