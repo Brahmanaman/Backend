@@ -7,4 +7,12 @@ const generateToken = (userId) => {
     return token
 }
 
-module.exports = generateToken
+const generateRawToken = (userId) => {
+    const token = jwt.sign({ userId }, config.JWT_RAW_TOKEN, { expiresIn: "10m" });
+    return token
+}
+
+module.exports = {
+    generateToken,
+    generateRawToken
+}

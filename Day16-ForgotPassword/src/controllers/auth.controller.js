@@ -1,12 +1,12 @@
-const { registerService, loginService } = require("../services/auth.service")
+const { registerService, loginService, forgetPasswordService, resetPasswordService, updatePasswordService } = require("../services/auth.service")
 const config = require("../config/config")
 const jwt = require("jsonwebtoken")
 const asyncHandler = require("../utils/asyncHandler")
 const ApiResponse = require("../utils/apiResponse")
 
 const registerUser = asyncHandler(async (req, res) => {
-    const { username, email, password } = req.body
-    const user = await registerService(username, email, password)
+    const { name, email, password } = req.body
+    const user = await registerService(name, email, password)
     const token = jwt.sign({ userId: user._id }, config.JWT_SECRET_KEY, { expiresIn: "1d" })
 
     res.cookie("token", token)
@@ -29,8 +29,34 @@ const loginUser = asyncHandler(async (req, res) => {
     }))
 })
 
+const forgetPassword = asyncHandler(async (req, res) => {
+    const { email } = req.body
+    await forgetPasswordService(email)
+    return res.json(new ApiResponse(200, "Linked sent successfully", {}))
+})
 
+const resetPassword = asyncHandler(async (req, res) => {
+    const { token } = req.params
+    const user = await resetPasswordService(token)
+    res.render("update.ejs", { userId: user._id })
+})
+
+const updatePassword = asyncHandler(async (req, res) => {
+    const { password, confirmPassword } = req.body
+    if (password !== confirmPassword) {
+        return res.json(new ApiResponse(400, "Password and confirm password does not match", {}))
+    }
+    if (!password) {
+        return res.json(new ApiResponse(400, "Password is required", {}))
+    }
+    const { userId } = req.params
+    await updatePasswordService(userId, password)
+    return res.json(new ApiResponse(200, "Password updated successfully", {}))
+})
 module.exports = {
     registerUser,
-    loginUser
+    loginUser,
+    forgetPassword,
+    resetPassword,
+    updatePassword
 }
