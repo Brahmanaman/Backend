@@ -53,10 +53,19 @@ const updatePassword = asyncHandler(async (req, res) => {
     await updatePasswordService(userId, password)
     return res.json(new ApiResponse(200, "Password updated successfully", {}))
 })
+
+const logout = asyncHandler(async (req, res) => {
+    res.clearCookie("token")
+    res.json(new ApiResponse(200, "User logged out successfully", {}))
+})
+
+
+
 module.exports = {
     registerUser,
     loginUser,
     forgetPassword,
     resetPassword,
-    updatePassword
+    updatePassword,
+    logout
 }
