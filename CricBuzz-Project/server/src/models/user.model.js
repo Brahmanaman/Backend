@@ -16,7 +16,6 @@ const userSchema = new Schema({
     },
     password: {
         type: String,
-        required: true
     },
     role: {
         type: String,
@@ -26,6 +25,9 @@ const userSchema = new Schema({
     isDeleted: {
         type: Boolean,
         default: false
+    },
+    picture: {
+        type: String
     }
 }, { timestamps: true })
 
