@@ -1,5 +1,6 @@
 import express from "express"
 import NoteModel from "./models/note.model.js"
+import mongoose from "mongoose"
 
 const app = express()
 app.use(express.json())
@@ -14,7 +15,7 @@ app.post("/api/notes", async (req, res) => {
     const { title, description } = req.body
 
     // ------ validation ------
-    if (!title || !body) {
+    if (!title || !description) {
         return res.status(400).json({ message: "Title and body are required" })
     }
 
@@ -78,7 +79,7 @@ app.put("/api/notes/:id", async (req, res) => {
     }
 
     const note = await NoteModel.findById(id)
-    if (!notes) {
+    if (!note) {
         return res.status(404).json({ message: "Note not found" })
     }
 
@@ -97,6 +98,11 @@ app.put("/api/notes/:id", async (req, res) => {
  */
 app.delete("/api/notes/:id", async (req, res) => {
     const id = req.params.id
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ message: "Invalid note id" })
+    }
+
     const note = await NoteModel.findByIdAndDelete(id)
     if (!note) {
         return res.status(400).json({ message: "Note not found" })
