@@ -67,14 +67,43 @@ app.get("/api/notes/:id", async (req, res) => {
 * @access Public
 */
 app.put("/api/notes/:id", async (req, res) => {
-    const { title, description } = req.body
+    const { description } = req.body
     const id = req.params.id
+
+    if (!description) {
+        return res.status(400).json({ message: "Description is required" })
+    }
+    if (description.trim().length < 10) {
+        return res.status(400).json({ message: "Description must be at least 10 characters" })
+    }
+
     const note = await NoteModel.findById(id)
-    note.title = title
+    if (!notes) {
+        return res.status(404).json({ message: "Note not found" })
+    }
+
     note.description = description
     await note.save()
     return res.status(200).json({
         message: "Note updated successfully",
+        note: note
+    })
+})
+
+/**
+ * @route DELETE /api/notes/:id
+ * @desc Delete a note by id
+ * @access Public
+ */
+app.delete("/api/notes/:id", async (req, res) => {
+    const id = req.params.id
+    const note = await NoteModel.findByIdAndDelete(id)
+    if (!note) {
+        return res.status(400).json({ message: "Note not found" })
+    }
+
+    return res.status(200).json({
+        message: "Note deleted successfully",
         note: note
     })
 })
