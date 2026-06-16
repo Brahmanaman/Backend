@@ -1,10 +1,66 @@
 import express from "express"
 import NoteModel from "./models/note.model.js"
 import mongoose from "mongoose"
+import userModel from "./models/users.model.js"
+import cookies from "cookie-parser"
+import jwt from "jsonwebtoken"
 
 const app = express()
 app.use(express.json())
+app.use(cookies())
+/**
+ * @route POST /api/auth/register
+ * @desc Register a user
+ * @access Public
+ */
+app.post("/api/auth/register", async (req, res) => {
+    const { name, email } = req.body
+    // ---validation---
+    if (!name || !email || !password) {
+        return res.status(400).json({ message: "Name, email and password are required" })
+    }
+    if (name.trim().length < 3) {
+        return res.status(400).json({ message: "Name must be at least 3 characters" })
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return res.status(400).json({ message: "Invalid email" })
+    }
 
+    const newUser = await userModel.create({ name, email, password })
+    const token = jwt.sign({ id: newUser._id, email: newUser.email }, process.env.JWT_SECRET, { expiresIn: "1d" })
+    res.cookie("token", token)
+
+    return res.status(201).json({
+        message: "User created successfully",
+        user: newUser
+    })
+})
+
+app.post("api/auth/login", async (req, res) => {
+    const {email, password} = req.body
+
+    if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" })
+    }
+
+    const user = await userModel.findOne({email})
+
+    if (!user) {
+        return res.status(404).json({ message: "User not found" })
+    }
+    
+    if (user.password !== password) {
+        return res.status(401).json({ message: "Invalid password" })
+    }
+
+    const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "1d" })
+    res.cookie("token", token)
+    return res.status(200).json({
+        message: "User logged in successfully",
+        user: user
+    })
+})
 
 /**
  * @route POST /api/notes
@@ -13,6 +69,9 @@ app.use(express.json())
  */
 app.post("/api/notes", async (req, res) => {
     const { title, description } = req.body
+    const token = req.cookies.token
+    const user = jwt.verify(token, process.env.JWT_SECRET)
+    req.user = user
 
     // ------ validation ------
     if (!title || !description) {
@@ -29,7 +88,7 @@ app.post("/api/notes", async (req, res) => {
 
     // ---- if validation passed, create notes ----
 
-    const newNote = await NoteModel.create({ title, description })
+    const newNote = await NoteModel.create({ title, description, user: req.user.email })
     return res.status(201).json({
         message: "Note created successfully",
         note: newNote
