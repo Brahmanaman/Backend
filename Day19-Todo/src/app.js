@@ -4,6 +4,8 @@ import mongoose from "mongoose"
 import userModel from "./models/users.model.js"
 import cookies from "cookie-parser"
 import jwt from "jsonwebtoken"
+import bcrypt from "bcrypt"
+import { authMiddleware } from "./middleware/auth.middleware.js"
 
 const app = express()
 app.use(express.json())
@@ -14,7 +16,7 @@ app.use(cookies())
  * @access Public
  */
 app.post("/api/auth/register", async (req, res) => {
-    const { name, email } = req.body
+    let { name, email, password } = req.body
     // ---validation---
     if (!name || !email || !password) {
         return res.status(400).json({ message: "Name, email and password are required" })
@@ -27,7 +29,20 @@ app.post("/api/auth/register", async (req, res) => {
         return res.status(400).json({ message: "Invalid email" })
     }
 
-    const newUser = await userModel.create({ name, email, password })
+    if (!password) {
+        return res.status(400).json({ message: "Password is required" })
+    }
+
+    const existingUser = await userModel.findOne({ email });
+    if (existingUser) {
+        return res.status(409).json({
+            message: "Email already registered"
+        });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10)
+
+    const newUser = await userModel.create({ name, email, password: hashedPassword })
     const token = jwt.sign({ id: newUser._id, email: newUser.email }, process.env.JWT_SECRET, { expiresIn: "1d" })
     res.cookie("token", token)
 
@@ -37,20 +52,26 @@ app.post("/api/auth/register", async (req, res) => {
     })
 })
 
-app.post("api/auth/login", async (req, res) => {
-    const {email, password} = req.body
+/**
+ * @route POST /api/auth/login
+ * @desc Login a user
+ * @access Public
+ */
+app.post("/api/auth/login", async (req, res) => {
+    const { email, password } = req.body
 
     if (!email || !password) {
         return res.status(400).json({ message: "Email and password are required" })
     }
 
-    const user = await userModel.findOne({email})
-
+    const user = await userModel.findOne({ email })
     if (!user) {
         return res.status(404).json({ message: "User not found" })
     }
-    
-    if (user.password !== password) {
+
+    const isPasswordValid = await bcrypt.compare(password, user.password)
+
+    if (!isPasswordValid) {
         return res.status(401).json({ message: "Invalid password" })
     }
 
@@ -67,11 +88,8 @@ app.post("api/auth/login", async (req, res) => {
  * @desc Create a note need title and description in the request body
  * @access Public
  */
-app.post("/api/notes", async (req, res) => {
+app.post("/api/notes", authMiddleware, async (req, res) => {
     const { title, description } = req.body
-    const token = req.cookies.token
-    const user = jwt.verify(token, process.env.JWT_SECRET)
-    req.user = user
 
     // ------ validation ------
     if (!title || !description) {
@@ -99,8 +117,8 @@ app.post("/api/notes", async (req, res) => {
  * @desc Get all notes
  * @access Public
  */
-app.get("/api/notes", async (req, res) => {
-    const notes = await NoteModel.find()
+app.get("/api/notes", authMiddleware, async (req, res) => {
+    const notes = await NoteModel.findOne({ user: req.user.email })
     return res.status(200).json({
         message: "Notes fetched successfully",
         notes: notes
@@ -112,9 +130,9 @@ app.get("/api/notes", async (req, res) => {
  * @desc Get a note by id
  * @access Public
  */
-app.get("/api/notes/:id", async (req, res) => {
+app.get("/api/notes/:id", authMiddleware, async (req, res) => {
     const id = req.params.id
-    const notes = await NoteModel.findById(id)
+    const notes = await NoteModel.findOne({ _id: id, user: req.user.email })
     return res.status(200).json({
         message: "Note fetched successfully",
         note: notes
@@ -126,7 +144,7 @@ app.get("/api/notes/:id", async (req, res) => {
 * @desc Update a note by id
 * @access Public
 */
-app.put("/api/notes/:id", async (req, res) => {
+app.put("/api/notes/:id", authMiddleware, async (req, res) => {
     const { description } = req.body
     const id = req.params.id
 
@@ -137,7 +155,7 @@ app.put("/api/notes/:id", async (req, res) => {
         return res.status(400).json({ message: "Description must be at least 10 characters" })
     }
 
-    const note = await NoteModel.findById(id)
+    const note = await NoteModel.findOne({ _id: id, user: req.user.email })
     if (!note) {
         return res.status(404).json({ message: "Note not found" })
     }
@@ -155,14 +173,14 @@ app.put("/api/notes/:id", async (req, res) => {
  * @desc Delete a note by id
  * @access Public
  */
-app.delete("/api/notes/:id", async (req, res) => {
+app.delete("/api/notes/:id", authMiddleware, async (req, res) => {
     const id = req.params.id
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({ message: "Invalid note id" })
     }
 
-    const note = await NoteModel.findByIdAndDelete(id)
+    const note = await NoteModel.findOneAndDelete({ _id: id, user: req.user.email })
     if (!note) {
         return res.status(400).json({ message: "Note not found" })
     }
