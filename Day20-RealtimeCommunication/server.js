@@ -1,3 +1,4 @@
+import { timeStamp } from "console";
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
@@ -16,9 +17,12 @@ const io = new Server(httpServer)
 
 io.on("connection", (socket) => {
     console.log("user connected")
-    socket.on("tesla", () => {
+    socket.on("tesla", (msg) => {
         console.log("tesla is listening")
-        io.emit("musk")
+        io.emit("musk", {
+            ...msg,
+            timeStamp: new Date()
+        })
     })
     socket.on("disconnect", () => {
         console.log("user disconnected")
