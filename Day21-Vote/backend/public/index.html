@@ -105,7 +105,13 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        const socket = io();
+        const roomName = prompt("enter room name")
+        const socket = io({
+            query: {
+                room: roomName
+            }
+        });
+
         document.querySelector(".yes-btn").addEventListener("click", () => {
             socket.emit("vote_yes")
         })
