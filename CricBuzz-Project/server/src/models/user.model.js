@@ -1,5 +1,5 @@
-import mongoose from "mongoose";
-import { ROLES } from "../constant/model.constant";
+import { Schema, model } from "mongoose";
+import { ROLES } from "../constant/model.constant.js";
 
 const userSchema = new Schema({
     name: {
@@ -27,9 +27,10 @@ const userSchema = new Schema({
         default: false
     },
     picture: {
-        type: String
+        type: String,
+        default: "https://px.pixxo.io/test/user.png"
     }
 }, { timestamps: true })
 
-const userModel = mongoose.model("User", userSchema);
+const userModel = model("User", userSchema);
 export default userModel

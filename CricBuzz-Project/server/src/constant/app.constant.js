@@ -1,5 +1,5 @@
 export default {
-    PORT: 3000,
+    PORT: 8000,
     MONGO_URL: "mongodb://localhost:27017/cricbuzz",
     LOGGER_LEVEL: "info",
     NODE_ENV: "development",

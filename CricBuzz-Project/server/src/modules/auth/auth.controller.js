@@ -8,11 +8,15 @@ class AuthController {
     }
 
     async googleCallback(req, res) {
+        console.log(req.user)
         const { accessToken, refreshToken } = await this.userService.createUser(req.user)
         res.cookie("refreshToken", refreshToken, app_config.cookie.refreshToken)
         res.cookie("accessToken", accessToken, app_config.cookie.accessToken)
+        res.json({
+            data: req.user
+        })
 
-        res.redirect(env.REDIRECT_URL)
+        // res.redirect(env.REDIRECT_URL)
     }
 
 }

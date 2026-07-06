@@ -4,7 +4,7 @@ import z from "zod"
 import logger from "./logger.js"
 import constant from "../constant/app.constant.js"
 
-
+//we are using zod for env validation
 const envSchema = z.object({
     PORT: z.coerce.number().default(constant.PORT),
     MONGO_URL: z.string().default(constant.MONGO_URL),
