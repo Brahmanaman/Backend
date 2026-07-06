@@ -11,21 +11,22 @@ class AuthService {
 
     async createUser(user) {
         const userExists = await this.userRepo.findByEmail(user.emails[0].value)
+        console.log("userExists ", userExists)
         let result = userExists
 
         if (!userExists) {
             const _user = await this.userRepo.create({ email: user.emails[0].value, name: user.name.givenName, picture: user.photos[0].value });
             result = _user
         }
-
+        console.log("result ", result)
         let data = {
             id: result._id,
             email: result.email,
             name: result.name,
             picture: result.picture
         }
-        const refreshToken = jwt.sign(data, env.REFRESH_TOKEN_SECRET, app_config.jwt_expires.refreshToken)
-        const accessToken = jwt.sign(data, env.ACCESS_TOKEN_SECRET, app_config.jwt_expires.accessToken)
+        const refreshToken = jwt.sign(data, env.REFRESH_TOKEN_SECRET, { expiresIn: app_config.jwt_expires.refreshToken })
+        const accessToken = jwt.sign(data, env.ACCESS_TOKEN_SECRET, { expiresIn: app_config.jwt_expires.accessToken })
 
         return { accessToken, refreshToken }
     }

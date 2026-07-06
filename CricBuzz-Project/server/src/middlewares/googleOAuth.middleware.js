@@ -1,6 +1,8 @@
 import { Strategy as GoogleStrategy } from "passport-google-oauth20"
 import passport from "passport";
 import env from "../config/env.js";
+import userModel from "../models/user.model.js";
+
 
 export default function googleAuthMiddleware(app) {
     app.use(passport.initialize());
@@ -11,9 +13,12 @@ export default function googleAuthMiddleware(app) {
         callbackURL: env.GOOGLE_CALLBACK_URL
     },
         function (accessToken, refreshToken, profile, cb) {
-            User.findOrCreate({ googleId: profile.id }, function (err, user) {
-                return cb(err, user);
-            });
+            try {
+                return cb(null, profile);
+            }
+            catch (error) {
+                return cb(error, false);
+            }
         }
     ));
 }

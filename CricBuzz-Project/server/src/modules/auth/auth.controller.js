@@ -8,8 +8,9 @@ class AuthController {
     }
 
     async googleCallback(req, res) {
-        console.log(req.user)
         const { accessToken, refreshToken } = await this.userService.createUser(req.user)
+        console.log(accessToken)
+        console.log(refreshToken)
         res.cookie("refreshToken", refreshToken, app_config.cookie.refreshToken)
         res.cookie("accessToken", accessToken, app_config.cookie.accessToken)
         res.json({

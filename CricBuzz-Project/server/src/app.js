@@ -9,6 +9,7 @@ import NotFound from "./shared/error/notfound.error.js";
 
 function createApp() {
     const app = express()
+    
     if (env.NODE_ENV === "development") {
         app.use(morgan("dev"))
     }

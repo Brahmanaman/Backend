@@ -14,13 +14,13 @@ export const app_config = {
     },
     cookie: {
         accessToken: {
-            httponly: true,
+            httpOnly: true,
             sameSite: "lax",
             secure: true,
             maxAge: 1 * 60 * 60 * 1000
         },
         refreshToken: {
-            httponly: true,
+            httpOnly: true,
             sameSite: "lax",
             secure: true,
             maxAge: 30 * 24 * 60 * 60 * 1000
