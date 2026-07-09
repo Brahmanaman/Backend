@@ -1,7 +1,7 @@
-import UserRepo from "../../repository/user.repository.js";
+import UserRepo from "../../../repository/user.repository.js";
 import jwt from "jsonwebtoken"
-import env from "../../config/env.js"
-import { app_config } from "../../constant/app.constant.js";
+import env from "../../../config/env.js"
+import { app_config } from "../../../constant/app.constant.js";
 
 class AuthService {
     constructor() {
@@ -18,12 +18,13 @@ class AuthService {
             const _user = await this.userRepo.create({ email: user.emails[0].value, name: user.name.givenName, picture: user.photos[0].value });
             result = _user
         }
-        console.log("result ", result)
+
         let data = {
             id: result._id,
             email: result.email,
             name: result.name,
-            picture: result.picture
+            picture: result.picture,
+            role: result.role
         }
         const refreshToken = jwt.sign(data, env.REFRESH_TOKEN_SECRET, { expiresIn: app_config.jwt_expires.refreshToken })
         const accessToken = jwt.sign(data, env.ACCESS_TOKEN_SECRET, { expiresIn: app_config.jwt_expires.accessToken })

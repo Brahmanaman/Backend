@@ -16,3 +16,15 @@ export default authMiddleware = (req, res, next) => {
         throw new UnAuthorized("Token not found", error.message)
     }
 }
+
+export const authorizationMiddleware = (...roles) => {
+    return (req, res, next) => {
+        if (!req.user) {
+            return next(new UnAuthorized("Please login first"))
+        }
+        if (!roles.includes(req.user.role)) {
+            return next(new UnAuthorized("Invalid role"))
+        }
+        next()
+    }
+}
