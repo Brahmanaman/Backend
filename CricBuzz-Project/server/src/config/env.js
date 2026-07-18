@@ -19,8 +19,7 @@ const envSchema = z.object({
     REFRESH_TOKEN_SECRET: z.string(),
     ACCESS_TOKEN_SECRET: z.string(),
     REDIRECT_URL: z.string(),
-})
-
+})  
 const parsed = envSchema.safeParse(process.env)
 if (!parsed.success) {
     logger.error(parsed.error.format());

@@ -1,6 +1,9 @@
-import { StatusCodes } from "http-status-codes"
+import { buildFailureResponse } from "../shared/utils/buildFailureResponse.js";
 const ErrorHandler = (err, req, res, next) => {
-    return res.status(err.statusCode || StatusCodes.INTERNAL_SERVER_ERROR).json({ message: err.message || "internal server error", details: err.details, success: false })
+    const errMessage = err.message;
+    const errName = err.name;
+    const errstatus = err.statusCode
+    return buildFailureResponse(res, errMessage, errstatus)
 }
 
 export default ErrorHandler

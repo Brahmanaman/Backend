@@ -1,3 +1,4 @@
+import env from "../config/env.js";
 export default {
     PORT: 8000,
     MONGO_URL: "mongodb://localhost:27017/cricbuzz",
@@ -5,25 +6,4 @@ export default {
     NODE_ENV: "development",
     RATE_LIMITWINDOWMS: 15 * 60 * 1000,
     RATE_LIMITMAX: 100
-}
-
-export const app_config = {
-    jwt_expires: {
-        accessToken: 1 * 60 * 60 * 1000,
-        refreshToken: 30 * 24 * 60 * 60 * 1000
-    },
-    cookie: {
-        accessToken: {
-            httpOnly: true,
-            sameSite: "lax",
-            secure: true,
-            maxAge: 1 * 60 * 60 * 1000
-        },
-        refreshToken: {
-            httpOnly: true,
-            sameSite: "lax",
-            secure: true,
-            maxAge: 30 * 24 * 60 * 60 * 1000
-        }
-    }
 }
