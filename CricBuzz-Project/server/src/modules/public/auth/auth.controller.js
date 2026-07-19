@@ -21,8 +21,9 @@ class AuthController {
 
     async refreshAccessToken(req, res) {
         const { accessToken } = await this.userService.RefreshAccessToken(req.cookies.refreshToken)
-        console.log(accessToken)
+
         res.cookie("accessToken", accessToken, app_config.cookie.accessToken)
+
         return buildSucessResponse(res)
     }
 

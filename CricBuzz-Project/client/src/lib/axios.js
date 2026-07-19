@@ -17,15 +17,23 @@ api.interceptors.response.use(
         const errorSuccess = error.response?.data?.success;
         const errorStatusCode = error.response?.status;
 
-        if (errorMessage == "Access Token expired" && !errorSuccess && errorStatusCode == 401) {
+
+        if (errorMessage == "Access Token expired" && !errorSuccess && errorStatusCode == 401 && !originalRequest._retry) {
+            originalRequest._retry = true;
             try {
                 await axios.get(`${API_URL}/auth/refreshToken`, { withCredentials: true });
                 return api(originalRequest);
             }
             catch (err) {
+                const refreshMessage = err.response?.data?.message;
+                if (refreshMessage === "Refresh token expired") {
+                    window.location.href = "/login";
+                }
+
                 return Promise.reject(err);
             }
         }
+
         return Promise.reject(error);
     }
 )

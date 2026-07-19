@@ -2,6 +2,8 @@ import UserRepo from "../../../repository/user.repository.js";
 import jwt from "jsonwebtoken"
 import env from "../../../config/env.js"
 import { app_config } from "../../../config/app.config.js";
+import NotFound from "../../../shared/error/notfound.error.js";
+import UnAuthorized from "../../../shared/error/unauthorized.error.js";
 
 class AuthService {
     constructor() {
@@ -10,7 +12,7 @@ class AuthService {
 
     async RefreshAccessToken(refreshToken) {
         if (!refreshToken) {
-            throw new NotFound("refresh token not found")
+            throw new UnAuthorized("Refresh token expired")
         }
         const payload = jwt.verify(refreshToken, env.REFRESH_TOKEN_SECRET)
         const { iat, exp, ...newPayload } = payload;

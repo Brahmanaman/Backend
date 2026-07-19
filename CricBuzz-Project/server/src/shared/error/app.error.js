@@ -1,5 +1,5 @@
 export default class AppError extends Error {
-    constructor(statusCode, message, details = "") {
+    constructor(message, statusCode, details = "") {
         super(message)
         this.statusCode = statusCode
         this.details = details
